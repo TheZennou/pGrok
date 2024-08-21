@@ -1,0 +1,5 @@
+{
+  "authToken": "YOUR_AUTH_TOKEN_HERE",
+  "cookie": "YOUR_COOKIE_HERE",
+  "csrfToken": "YOUR_CSRF_TOKEN_HERE"
+}
