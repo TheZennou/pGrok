@@ -121,12 +121,37 @@ function removeTweetLinks(text) {
 
   return text.replace(tweetLinkRegex, replaceFunc);
 }
+app.get('/models', (req, res) => {
+  const models = [
+    {
+      id: "fun",
+      name: "Grok Fun",
+      description: "Grok model with a fun personality"
+    },
+    {
+      id: "normal",
+      name: "Grok Normal",
+      description: "Standard Grok model"
+    }
+  ];
+  
+  res.json({ data: models });
+});
+
 app.post('/chat/completions', limiter, async (req, res) => {
   const startTime = new Date();
   const clientIp = getClientIp(req);
   console.log(`[${startTime.toISOString()}] Received new request from IP: ${clientIp}`);
 
-  const { messages } = req.body;
+  const { messages, model } = req.body;
+
+  let systemPromptName = "normal";
+  if (model === "fun") {
+    systemPromptName = "fun";
+  }
+
+  console.log(`Selected model: ${model || 'default'}`);
+  console.log(`Using system prompt: ${systemPromptName}`);
 
   try {
     const conversationId = await getNewConversationId();
@@ -142,13 +167,12 @@ app.post('/chat/completions', limiter, async (req, res) => {
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive'
     });
-
     const grokResponse = await axios({
       ...grokConfig,
       responseType: 'stream',
       data: JSON.stringify({
         responses: [{ message: fullContext, sender: 1 }],
-        systemPromptName: "fun", //change this to "normal" if you want the dry mode.
+        systemPromptName: systemPromptName,
         grokModelOptionId: "grok-2",
         conversationId: conversationId
       })
@@ -168,6 +192,7 @@ app.post('/chat/completions', limiter, async (req, res) => {
           try {
             const parsedChunk = JSON.parse(line);
             if (parsedChunk.result && parsedChunk.result.message) {
+              // Remove tweet links from the message
               const cleanedMessage = removeTweetLinks(parsedChunk.result.message);
               outputWordCount += countWords(cleanedMessage);
               const sseData = JSON.stringify({
@@ -187,7 +212,7 @@ app.post('/chat/completions', limiter, async (req, res) => {
       res.end();
 
       const endTime = new Date();
-      const duration = (endTime - startTime) / 1000; 
+      const duration = (endTime - startTime) / 1000; // Duration in seconds
       console.log(`[${endTime.toISOString()}] Request completed for IP: ${clientIp}`);
       console.log(`Duration: ${duration.toFixed(2)} seconds`);
       console.log(`Output word count: ${outputWordCount}`);
@@ -200,7 +225,7 @@ app.post('/chat/completions', limiter, async (req, res) => {
     res.status(500).json(errorResponse);
 
     const endTime = new Date();
-    const duration = (endTime - startTime) / 1000; 
+    const duration = (endTime - startTime) / 1000; // Duration in seconds
     console.log(`[${endTime.toISOString()}] Request failed`);
     console.log(`Duration: ${duration.toFixed(2)} seconds`);
     console.log('---');
