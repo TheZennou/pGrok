@@ -212,7 +212,7 @@ app.post('/chat/completions', limiter, async (req, res) => {
       res.end();
 
       const endTime = new Date();
-      const duration = (endTime - startTime) / 1000; // Duration in seconds
+      const duration = (endTime - startTime) / 1000;
       console.log(`[${endTime.toISOString()}] Request completed for IP: ${clientIp}`);
       console.log(`Duration: ${duration.toFixed(2)} seconds`);
       console.log(`Output word count: ${outputWordCount}`);
@@ -225,7 +225,7 @@ app.post('/chat/completions', limiter, async (req, res) => {
     res.status(500).json(errorResponse);
 
     const endTime = new Date();
-    const duration = (endTime - startTime) / 1000; // Duration in seconds
+    const duration = (endTime - startTime) / 1000;
     console.log(`[${endTime.toISOString()}] Request failed`);
     console.log(`Duration: ${duration.toFixed(2)} seconds`);
     console.log('---');
